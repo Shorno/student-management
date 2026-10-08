@@ -11,34 +11,116 @@ This project was created with [Better-T-Stack](https://github.com/AmanVarshney01
 - **Drizzle** - TypeScript-first ORM
 - **PostgreSQL** - Database engine
 
-## Getting Started
+## What the App Does
 
-First, install the dependencies:
+A student information system:
+
+- **Register (`/`)**: a form with name, student ID, department, batch, year, semester, address, email, phone, gender (radio), club membership (checkboxes), photo, birth date (calendar), captcha, and terms and conditions.
+- **Students (`/students`)**: every record in a table, including a derived **Age** column calculated from the birth date. You can search by Student ID and edit or delete any row.
+- **Edit (`/students/<id>/edit`)**: update a record. Student ID is the primary key, so it can't be changed.
+
+## Running Locally
+
+### 1. Prerequisites
+
+- **Node.js 22**. The version is pinned in `.node-version`.
+  - With [fnm](https://github.com/Schniz/fnm), run `fnm use` in the project folder.
+  - With [nvm](https://github.com/nvm-sh/nvm), run `nvm use 22`.
+  - Avoid Node 24 on Windows. The `varlock` env tool crashes when it exits there, which makes `pnpm install` and every `pnpm run` script fail.
+- **pnpm 11**. The easiest way to get the exact version is through Corepack, which ships with Node:
+
+  ```bash
+  corepack enable
+  ```
+
+- **A Neon Postgres database**. The free tier is enough; sign up at [neon.tech](https://neon.tech). The app connects with Neon's serverless HTTP driver, so a plain local PostgreSQL server will not work without changing the driver in `packages/db/src/index.ts`.
+
+Check your versions:
+
+```bash
+node -v
+```
+
+```bash
+pnpm -v
+```
+
+### 2. Clone the project and install dependencies
+
+```bash
+git clone <repository-url> student-management
+```
+
+```bash
+cd student-management
+```
 
 ```bash
 pnpm install
 ```
 
-## Database Setup
+`pnpm install` also generates the typed env files `apps/web/src/env.ts` and `packages/db/src/env.ts`.
 
-This project uses PostgreSQL with Drizzle ORM.
+### 3. Configure the database connection
 
-1. Make sure you have a PostgreSQL database set up.
-2. Update your `apps/web/.env` file with your PostgreSQL connection details.
+Create `apps/web/.env`. It is gitignored, so it is never committed. Add your Neon connection string from the Neon dashboard (**Connect** → copy the connection string):
 
-3. Apply the schema to your database:
+```env
+DATABASE_URL=postgresql://<user>:<password>@<host>.neon.tech/neondb?sslmode=require
+```
+
+This is the only variable the app needs. `packages/db` reads the same file, so you don't need a second `.env`.
+
+### 4. Create the database table
+
+Push the Drizzle schema (`packages/db/src/schema/index.ts`) to your database. This creates the `students` table:
 
 ```bash
 pnpm run db:push
 ```
 
-Then, run the development server:
+Run it again whenever you change the schema.
+
+### 5. Start the development server
 
 ```bash
 pnpm run dev
 ```
 
-Open [http://localhost:3001](http://localhost:3001) in your browser to see the fullstack application.
+Open [http://localhost:3001](http://localhost:3001). Pages and server code reload automatically when you save a file.
+
+### 6. (Optional) Production build
+
+```bash
+pnpm run build
+```
+
+```bash
+cd apps/web
+```
+
+```bash
+node .output/server/index.mjs
+```
+
+The production server listens on [http://localhost:3000](http://localhost:3000) by default; set the `PORT` environment variable to change it. Start it from `apps/web` as shown, so it finds `DATABASE_URL` in `apps/web/.env`.
+
+### Browsing the data
+
+To view and edit table rows directly in a browser-based database UI, run:
+
+```bash
+pnpm run db:studio
+```
+
+### Troubleshooting
+
+| Problem | Fix |
+|---|---|
+| `Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)` during install or any `pnpm run` | You are on Node 24 for Windows. Switch to Node 22 and run `pnpm install` again. |
+| `[varlock] config is invalid` | `apps/web/.env` is missing, or `DATABASE_URL` is empty. |
+| `relation "students" does not exist` | Run `pnpm run db:push`. |
+| Port 3001 is already in use | Stop the other process, or run `pnpm --filter web dev --port 3002`. |
 
 ## UI Customization
 
@@ -96,10 +178,15 @@ For more details, see the guide on [Deploying with Docker Compose](https://www.b
 ```
 student-management/
 ├── apps/
-│   └── web/         # Fullstack application (React + TanStack Start)
+│   └── web/                          # Fullstack application (React + TanStack Start)
+│       └── src/
+│           ├── routes/               # Pages: / (register), /students, /students/$studentId/edit
+│           ├── components/           # Student form, captcha, header
+│           ├── lib/student.ts        # Dropdown options + validation rules (shared by form and server)
+│           └── server/students.functions.ts  # Backend: insert, view, update, delete, search
 ├── packages/
-│   ├── ui/          # Shared shadcn/ui components and styles
-│   └── db/          # Database schema & queries
+│   ├── ui/                           # Shared shadcn/ui components and styles
+│   └── db/                           # Drizzle schema (students table) & database client
 ```
 
 ## Available Scripts
