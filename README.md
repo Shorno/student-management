@@ -23,10 +23,7 @@ A student information system:
 
 ### 1. Prerequisites
 
-- **Node.js 22**. The version is pinned in `.node-version`.
-  - With [fnm](https://github.com/Schniz/fnm), run `fnm use` in the project folder.
-  - With [nvm](https://github.com/nvm-sh/nvm), run `nvm use 22`.
-  - Avoid Node 24 on Windows. The `varlock` env tool crashes when it exits there, which makes `pnpm install` and every `pnpm run` script fail.
+- **Node.js 22 or 24**. Node 22 is pinned in `.node-version` for version managers like [fnm](https://github.com/Schniz/fnm) (`fnm use`) or [nvm](https://github.com/nvm-sh/nvm) (`nvm use 22`), but a normal Node 24 install also works.
 - **pnpm 11**. The easiest way to get the exact version is through Corepack, which ships with Node:
 
   ```bash
@@ -117,7 +114,7 @@ pnpm run db:studio
 
 | Problem | Fix |
 |---|---|
-| `Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)` during install or any `pnpm run` | You are on Node 24 for Windows. Switch to Node 22 and run `pnpm install` again. |
+| `Assertion failed: !(handle->flags & UV_HANDLE_CLOSING)` during install or any `pnpm run` | On Windows with Node 24, varlock's usage telemetry crashes the process as it exits. `.varlock/config.json` turns that telemetry off for this project, so make sure the file exists (pull the latest code), then run `pnpm install` again. As a one-off workaround, set `DO_NOT_TRACK=1` before the command. |
 | `[varlock] config is invalid` | `apps/web/.env` is missing, or `DATABASE_URL` is empty. |
 | `relation "students" does not exist` | Run `pnpm run db:push`. |
 | Port 3001 is already in use | Stop the other process, or run `pnpm --filter web dev --port 3002`. |
