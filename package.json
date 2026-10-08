@@ -1,0 +1,35 @@
+{
+  "name": "student-management",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm -r dev",
+    "build": "pnpm -r --if-present build",
+    "check-types": "pnpm -r check-types",
+    "dev:web": "pnpm --filter web dev",
+    "db:push": "pnpm --filter @student-management/db db:push",
+    "db:studio": "pnpm --filter @student-management/db db:studio",
+    "db:generate": "pnpm --filter @student-management/db db:generate",
+    "db:migrate": "pnpm --filter @student-management/db db:migrate",
+    "docker:build": "docker compose build",
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "env:generate": "varlock codegen --path ./apps/web/ && varlock codegen --path ./packages/db/",
+    "postinstall": "varlock codegen --path ./apps/web/ && varlock codegen --path ./packages/db/"
+  },
+  "dependencies": {
+    "zod": "catalog:"
+  },
+  "devDependencies": {
+    "@student-management/config": "workspace:*",
+    "@types/node": "^26.4.1",
+    "typescript": "catalog:",
+    "varlock": "catalog:"
+  },
+  "packageManager": "pnpm@11.22.0"
+}
